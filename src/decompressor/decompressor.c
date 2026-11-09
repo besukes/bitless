@@ -48,8 +48,10 @@ static void readHeaderLine(char * line , CompressInfo* f_info , int parser[MAX_S
         unsigned char symb = (unsigned char)line[i];
         parser[symb] = line[i+1];
         if(line[i+1] == '\0') i++;
-        else i+=2;
-        (*N)--;
+        else{
+            i+=2;
+            (*N)--;
+        }
     }
 }
 
@@ -61,7 +63,7 @@ static int parseFileHeader(FILE* file,CompressInfo* f_info,int * lrb){
     //Reads the last relevant bits in the last relevant byte , stored at the start of the header
     fgets(line,LINE_MAX,file);
     *lrb = (int)line[0];
-    if(line[1] == '\n' || line[2] != '\n') return (INVALID_HEADER_FORMAT);
+    if(line[2] != '\n') return (INVALID_HEADER_FORMAT);
     int number_symbols = (int)line[1] , keep_searching = number_symbols;
 
     //Reads the Frequency table of each symbol to reconstruct the probabilities table
@@ -108,9 +110,11 @@ static void decompress(FILE* ext_file ,CompressInfo* f_info , int lrb){
     while(fgets(line,LINE_MAX,cmp_file)){
         for(int i=0;line[i]!='\0';i++){
             unsigned long long byte = (unsigned long long)line[i];
-            while(byte){
+            int read_bits = (line[i+1] == '\0') ? lrb : 8; //Conta quantos bits vamos ler neste byte
+            while(byte && read_bits){
                 unsigned long long mrb = byte & (1ULL<<8); //Char has 8 bits , we get the most relevant bit
                 byte<<=1;
+                read_bits --;
                 buffer |= mrb;
                 buffer_size++;
                 for(int j=0;j<f_info->n_symbols;j++){
