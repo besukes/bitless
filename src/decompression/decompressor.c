@@ -136,7 +136,7 @@ static void decompress(char * buffer , int buffer_cur_indx , int header_size , F
         if(buffer_cur_indx >= BUFFER_SIZE) fread(buffer,1,new_buffer_size,cmp_file);
         for(int i=0;i<new_buffer_size;i++){
             unsigned long long byte = (unsigned long long)buffer[i];
-            int read_bits = (i!= new_buffer_size - 1 && buffer[i+1] == '\0') ? lrb : 8; //Conta quantos bits vamos ler neste byte
+            int read_bits = (remaining_file_size - i == 1) ? lrb : 8; //Verifies if we are at the last byte
             while(byte && read_bits){
                 unsigned long long mrb = byte & (1ULL<<7); //Char has 8 bits , we get the most relevant bit
                 byte<<=1;
