@@ -133,15 +133,15 @@ static void decompress(char * buffer , int buffer_cur_indx , int header_size , F
     //get the file information and size
     int descritor = fileno(cmp_file);
     struct stat st;fstat(descritor,&st);
-    long remaining_file_size = st.st_size - header_size;
+    long file_size = st.st_size;
+    long remaining_file_size = file_size - header_size , file_read_size = 0;
 
-    while(remaining_file_size > 0){
-        int new_buffer_size = (remaining_file_size > BUFFER_SIZE) ? BUFFER_SIZE : remaining_file_size;
+    while(file_read_size < remaining_file_size){
         if(buffer_cur_indx >= BUFFER_SIZE){
-            fread(buffer,1,new_buffer_size,cmp_file);
+            fread(buffer,1,BUFFER_SIZE,cmp_file);
             buffer_cur_indx = 0;
         }
-        for(;buffer_cur_indx<new_buffer_size;buffer_cur_indx++){
+        for(;buffer_cur_indx < BUFFER_SIZE && file_read_size < remaining_file_size;buffer_cur_indx++,file_read_size++){
             unsigned char byte = buffer[buffer_cur_indx];
             int read_bits = (remaining_file_size - buffer_cur_indx == 1) ? lrb : 8; //Verifies if we are at the last byte
             while(read_bits){
@@ -162,7 +162,6 @@ static void decompress(char * buffer , int buffer_cur_indx , int header_size , F
                 }
             }
         }
-        remaining_file_size-=new_buffer_size;
     }
     //Still need to take care of the last file byte and use lrb for the last relevant bits in the last byte
 }
