@@ -128,17 +128,20 @@ static void decompress(char * buffer , int buffer_cur_indx , int header_size , F
     FILE * cmp_file = f_info->file;
     unsigned long long output_code = 0;
     int code_size = 0;
-    struct stat st;fstat(cmp_file,&st);
+
+    //get the file information and size
+    int descritor = fileno(cmp_file);
+    struct stat st;fstat(descritor,&st);
     long remaining_file_size = st.st_size - header_size;
 
     while(remaining_file_size > 0){
         int new_buffer_size = (remaining_file_size > BUFFER_SIZE) ? BUFFER_SIZE : remaining_file_size;
         if(buffer_cur_indx >= BUFFER_SIZE) fread(buffer,1,new_buffer_size,cmp_file);
         for(int i=0;i<new_buffer_size;i++){
-            unsigned long long byte = (unsigned long long)buffer[i];
+            char byte = buffer[i];
             int read_bits = (remaining_file_size - i == 1) ? lrb : 8; //Verifies if we are at the last byte
             while(byte && read_bits){
-                unsigned long long mrb = byte & (1ULL<<7); //Char has 8 bits , we get the most relevant bit
+                char mrb = byte & (1ULL<<7); //Char has 8 bits , we get the most relevant bit
                 byte<<=1;
                 output_code |= mrb;
                 code_size++;
