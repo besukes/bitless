@@ -1,4 +1,5 @@
 #include "src/includes/types.h"
+#include "sorter.h"
 
 
 /*Sorts Descrently by probability*/
@@ -58,7 +59,7 @@ void sortByCodeLength(char* symbs , NewSymbols* code , int N){
 
         //Back tracking algorithm while the code length of j is bigger than of i's
         //We also need to break the tie of codes being of equal length , by its symbol
-        while(j >= 0 && (code[j].length > c_key.length) || (code[j].length == c_key.length && (unsigned char)symbs[j] > (unsigned char)s_key)){
+        while(j >= 0 && (code[j].length > c_key.length || code[j].length == c_key.length && (unsigned char)symbs[j] > (unsigned char)s_key)){
             code[j+1]  = code[j];
             symbs[j+1] = symbs[j];
             j--;

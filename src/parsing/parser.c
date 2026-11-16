@@ -1,4 +1,7 @@
 #include "parser.h"
+#include "src/debug/debug.h"
+
+
 
 /* Passes the symbols of the file to an array of symbols */
 static void assertSymbols(char * orig , int number_s , char * dest){

@@ -1,5 +1,8 @@
 #include "write_out.h"
 #include "src/utils/sorter.h"
+#include "src/debug/debug.h"
+#include "src/utils/strings.h"
+#include <stdio.h>
 
 
 /*Writes decompresssion info in the notation NEW_SYMBOL = OLD_SYMBOL in order to decompress after*/

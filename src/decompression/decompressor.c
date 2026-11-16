@@ -10,8 +10,13 @@ it may (and most likely WILL) NOT WORK on a file compressed using other construc
     The decompression itself cannot be done as of now but i'll eventually add it to the main function as a
 text argument that can be sent before the paths.
 */
-#include "decompressor.h"
+#include "src/includes/types.h"
+#include "src/compression/compressor.h"
+#include "src/initialization/init_clean.h"
+#include "src/writing/write_out.h"
+#include <stdio.h>
 #include <sys/stat.h>
+
 #define NO_ERRORS 0
 #define INVALID_PATH 1
 #define INVALID_HEADER_FORMAT 2

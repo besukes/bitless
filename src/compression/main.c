@@ -1,7 +1,9 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include "types.h"
+#include "src/parsing/parser.h"
+#include "src/initialization/init_clean.h"
+#include "src/compression/compressor.h"
 #include <time.h>
-#include "src/includes/main.h"
 
 #define INVALID_PATH 1
 #define NO_PATH 2

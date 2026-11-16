@@ -2,6 +2,12 @@
 details about the compresssion so it can be decompressed after when , and if , needed.
 */
 #include "compressor.h"
+#include "src/writing/write_out.h"
+#include "src/debug/debug.h"
+#include "src/utils/sorter.h"
+#include "src/algorithms/sf.h"
+#include "src/algorithms/huff_tree.h"
+#include <math.h>
 
 
 /* Checks if the probability distribution has maximum entropy , because if it does then the file cannot be compressed*/

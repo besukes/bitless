@@ -1,4 +1,7 @@
 #include "init_clean.h"
+#include <stdio.h>
+
+
 
 /* Initializes the compression information structure */
 CompressInfo init_compress_info(void){

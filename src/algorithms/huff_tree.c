@@ -1,4 +1,3 @@
-#include "huff_tree.h"
 /*
     Module that contains Huffman's data compression algorithm.
     This algorithm works by , given a crescently ordered list of each symbols probability , creates N leaf nodes ,
@@ -13,6 +12,10 @@ and therefore we can assign that symbols code as the path it took from the root 
 length the function's recursive depth.
 
 */
+#include "huff_tree.h"
+
+
+
 
 /*  Removes the leaves[0] and leaves[1] from the array , substituing by the father node , and then sorting the entire array so we are left with
 an array that has each element sorted by its frequency , crescently*/

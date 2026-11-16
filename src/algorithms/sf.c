@@ -1,4 +1,3 @@
-#include "sf.h"
 /*  
     Module that contains Shannon Fano's compression algorithm.
     What this algorithm does is , after grabing each symbol and calculating its probability and
@@ -10,6 +9,9 @@ will be atributed with a value of 0 on its respective code.
     The "right subset" will be given a code of 1.
     This recursiveness repeats until there's only 1 symbol in a set.
 */
+#include "sf.h"
+
+
 
 
 /* Recursively applies Shannon-Fano's compression algorithm to turn the symbol into a sequence of bits*/
