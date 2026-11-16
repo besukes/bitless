@@ -1,6 +1,6 @@
-.PHONY: clean rmt compressor 
+.PHONY: clean rmt compressor decompressor
 
-all: compressor
+all: compressor decompressor
 
 CC = gcc
 

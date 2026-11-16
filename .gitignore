@@ -9,7 +9,8 @@ dcbuild
 compressor
 decompressor
 
-#Ignore newmade files
+#Ignore newmade and test files
+tests
 tests/*_hf.zip
 tests/*_sf.zip
 tests/*_hf.txt

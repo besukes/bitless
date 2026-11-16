@@ -11,11 +11,17 @@ it may (and most likely WILL) NOT WORK on a file compressed using other construc
 text argument that can be sent before the paths.
 */
 #include "decompressor.h"
+#include <sys/stat.h>
 #define NO_ERRORS 0
 #define INVALID_PATH 1
 #define INVALID_HEADER_FORMAT 2
 #define NO_PATH 3
 #define ALREADY_EXISTING_FOLDER 4
+#define BUFFER_SIZE 20480 //20Kib
+
+
+
+
 
 
 
@@ -41,36 +47,48 @@ static int dc_error_handler(int flags , int indx){
     return 0;
 }
 
+
+
+
+
 /*Reads the frequency table of a compressed file header and stores the information directly onto f_info*/
-static void readHeaderLine(char * line , CompressInfo* f_info , int parser[MAX_SYMBOLS] , int* N){
+static int readHeaderBuffer(char * buffer , int size_buffer , int parser[MAX_SYMBOLS] , int * nmbr_pairs){
     int i=0;
-    while(line[i]!='\0'){
-        unsigned char symb = (unsigned char)line[i];
-        parser[symb] = line[i+1];
-        if(line[i+1] == '\0') i++;
+    while(i<size_buffer && *nmbr_pairs > 0){
+        unsigned char symb = (unsigned char)buffer[i];
+        parser[symb] = buffer[i+1];
+        if(buffer[i+1] == '\0') i++;
         else i+=2;
-        (*N)--;
+        (*nmbr_pairs)--;
     }
+    return i;
 }
+
+
+
 
 /*Parses file header to store the information on each symbol that exists and keeps its frequency to calculate
 the probability to then apply the Shannon-Fano's algorithm to decompress the file*/
-static int parseFileHeader(FILE* file,CompressInfo* f_info,int * lrb){
-    char line[LINE_MAX];
-
+static int parseFileHeader(FILE* file,CompressInfo* f_info,int * lrb,char * buffer , int * buffer_cur_indx , int * h_size){
     //Reads the last relevant bits in the last relevant byte , stored at the start of the header
-    fgets(line,LINE_MAX,file);
-    *lrb = (int)line[0];
-    if(line[1] == '\n' || line[2] != '\n') return (INVALID_HEADER_FORMAT);
-    int number_symbols = (int)line[1] , keep_searching = number_symbols;
+    size_t read_bytes = fread(buffer,1,BUFFER_SIZE - 1,file);
+    buffer[read_bytes] = '\0';
+    *lrb = (int)buffer[0];
+
+    int number_symbols = (int)buffer[1] , keep_searching = number_symbols;
 
     //Reads the Frequency table of each symbol to reconstruct the probabilities table
     int parsing_error = 0;
     int parser[MAX_SYMBOLS] = {0};
-    while(fgets(line,LINE_MAX,file) && keep_searching){
-        readHeaderLine(line,f_info,parser,&keep_searching);
+    while(keep_searching){
+        *buffer_cur_indx = readHeaderBuffer(buffer,read_bytes,parser,&keep_searching);
+        *h_size += *buffer_cur_indx;
+        if(keep_searching){
+            read_bytes = fread(buffer,1,BUFFER_SIZE -1,file);
+            buffer[read_bytes] = '\0';
+            *buffer_cur_indx = 0;
+        }
     }
-    if(parsing_error) return (INVALID_HEADER_FORMAT);
 
     f_info->n_symbols = number_symbols;
     f_info->symbols = malloc(sizeof(char)*number_symbols);
@@ -99,45 +117,55 @@ static int parseFileHeader(FILE* file,CompressInfo* f_info,int * lrb){
     return (NO_ERRORS);
 }
 
+
+
+
 /*Decompresses the file back to normal given the information after the execution of Shannon-Fano's algorithm*/
-static void decompress(FILE* ext_file ,CompressInfo* f_info , int lrb){
-    char line[LINE_MAX];
+static void decompress(char * buffer , int buffer_cur_indx , int header_size , FILE* ext_file ,CompressInfo* f_info , int lrb){
     FILE * cmp_file = f_info->file;
-    unsigned long long buffer = 0;
-    int buffer_size = 0;
-    while(fgets(line,LINE_MAX,cmp_file)){
-        for(int i=0;line[i]!='\0';i++){
-            unsigned long long byte = (unsigned long long)line[i];
+    unsigned long long output_code = 0;
+    int code_size = 0;
+    struct stat st;fstat(cmp_file,&st);
+    long remaining_file_size = st.st_size - header_size;
+
+    while(remaining_file_size > 0){
+        int new_buffer_size = (remaining_file_size > BUFFER_SIZE) ? BUFFER_SIZE : remaining_file_size;
+        if(buffer_cur_indx >= BUFFER_SIZE) fread(buffer,1,new_buffer_size,cmp_file);
+        for(int i=0;i<new_buffer_size;i++){
+            unsigned long long byte = (unsigned long long)buffer[i];
             while(byte){
-                unsigned long long mrb = byte & (1ULL<<8); //Char has 8 bits , we get the most relevant bit
+                unsigned long long mrb = byte & (1ULL<<7); //Char has 8 bits , we get the most relevant bit
                 byte<<=1;
-                buffer |= mrb;
-                buffer_size++;
+                output_code |= mrb;
+                code_size++;
                 for(int j=0;j<f_info->n_symbols;j++){
                     int length = f_info->newcode_arr[j].length;
-                    if(length == buffer_size){
-                        if(buffer == f_info->newcode_arr[j].new_code){
+                    if(length == code_size){
+                        if(output_code == f_info->newcode_arr[j].new_code){
                             fprintf(ext_file,"%c",f_info->symbols[j]);
-                            buffer = 0;
-                            buffer_size = 0;
+                            code_size = 0;
+                            output_code = 0;
                         }
                     }
                 }
             }
         }
+        remaining_file_size-=new_buffer_size;
     }
     //Still need to take care of the last file byte and use lrb for the last relevant bits in the last byte
 }
 
 
 /*Decompression function that grabs a compressed file and decompresses it back to normal */
-static int decompress_handler(char * path , CompressInfo* f_info){
+static int decompression_handler(char * path , CompressInfo* f_info){
 
     FILE * compressed_file = fopen(path,"r");
     if(compressed_file == NULL) return (INVALID_PATH);
 
     int lrb = 0; //Last relevant bits in the file on the last byte
-    int parsing_error = parseFileHeader(compressed_file,f_info,&lrb);
+    char buffer[BUFFER_SIZE];
+    int buffer_cur_indx = 0 , header_size = 0;
+    int parsing_error = parseFileHeader(compressed_file,f_info,&lrb,buffer,&buffer_cur_indx,&header_size);
 
     if(parsing_error) return (INVALID_HEADER_FORMAT);
     
@@ -156,7 +184,7 @@ static int decompress_handler(char * path , CompressInfo* f_info){
     }
 
     new_file = fopen(new_path,"w");
-    decompress(new_file,f_info,lrb);
+    decompress(buffer,buffer_cur_indx,header_size,new_file,f_info,lrb);
     fclose(new_file);
 
     return (NO_ERRORS);
@@ -171,7 +199,7 @@ int main(int argc , char ** argv){
     for(int i=1;i<argc;i++){
         resetCompressionInfo(&file_info);
 
-        int error_arrived = decompress_handler(argv[i],&file_info);
+        int error_arrived = decompression_handler(argv[i],&file_info);
         if(error_arrived) error = dc_error_handler(error_arrived,i);
 
         if(error) break;
