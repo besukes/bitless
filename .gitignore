@@ -10,9 +10,8 @@ compressor
 decompressor
 
 #Ignore newmade and test files
-tests1
-tests1/*_hf.zip
-tests1/*_sf.zip
-tests1/*_hf.txt
-tests1/*_sf.txt
-
+tests
+tests/*_hf.zip
+tests/*_sf.zip
+tests/*_hf.txt
+tests/*_sf.txt
