@@ -71,8 +71,7 @@ static int readHeaderBuffer(char * buffer , int current_indx , int size_buffer ,
 the probability to then apply the Shannon-Fano's algorithm to decompress the file*/
 static int parseFileHeader(FILE* file,CompressInfo* f_info,int * lrb,char * buffer , int * buffer_cur_indx , int * h_size){
     //Reads the last relevant bits in the last relevant byte , stored at the start of the header
-    size_t read_bytes = fread(buffer,1,BUFFER_SIZE - 1,file);
-    buffer[read_bytes] = '\0';
+    size_t read_bytes = fread(buffer,1,BUFFER_SIZE,file);
     *lrb = (int)buffer[0];
 
     int number_symbols = (int)buffer[1] , keep_searching = number_symbols;
@@ -87,8 +86,7 @@ static int parseFileHeader(FILE* file,CompressInfo* f_info,int * lrb,char * buff
         *buffer_cur_indx = readHeaderBuffer(buffer,*buffer_cur_indx,read_bytes,parser,&keep_searching);
         *h_size += *buffer_cur_indx;
         if(keep_searching){
-            read_bytes = fread(buffer,1,BUFFER_SIZE -1,file);
-            buffer[read_bytes] = '\0';
+            read_bytes = fread(buffer,1,BUFFER_SIZE,file);
             *buffer_cur_indx = 0;
         }
     }
@@ -143,7 +141,7 @@ static void decompress(char * buffer , int buffer_cur_indx , int header_size , F
         }
         for(;buffer_cur_indx < BUFFER_SIZE && file_read_size < remaining_file_size;buffer_cur_indx++,file_read_size++){
             unsigned char byte = buffer[buffer_cur_indx];
-            int read_bits = (remaining_file_size - buffer_cur_indx == 1) ? lrb : 8; //Verifies if we are at the last byte
+            int read_bits = ((remaining_file_size - file_read_size == 1) && lrb) ? lrb : 8; //Verifies if we are at the last byte
             while(read_bits){
                 unsigned char mrb = (byte >>7) & 1; //Char has 8 bits , we get the most relevant bit
                 byte<<=1;
