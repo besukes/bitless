@@ -92,6 +92,7 @@ static int parseFileHeader(FILE* file,CompressInfo* f_info,int * lrb,char * buff
             *buffer_cur_indx = 0;
         }
     }
+    *buffer_cur_indx+=1;
 
     f_info->n_symbols = number_symbols;
     f_info->symbols = malloc(sizeof(char)*number_symbols);
@@ -143,10 +144,10 @@ static void decompress(char * buffer , int buffer_cur_indx , int header_size , F
         for(;buffer_cur_indx<new_buffer_size;buffer_cur_indx++){
             unsigned char byte = buffer[buffer_cur_indx];
             int read_bits = (remaining_file_size - buffer_cur_indx == 1) ? lrb : 8; //Verifies if we are at the last byte
-            while(byte && read_bits){
-                unsigned char mrb = byte & (1ULL<<7); //Char has 8 bits , we get the most relevant bit
+            while(read_bits){
+                unsigned char mrb = (byte >>7) & 1; //Char has 8 bits , we get the most relevant bit
                 byte<<=1;
-                output_code |= mrb;
+                output_code = (output_code << 1) | mrb;
                 code_size++;
                 read_bits --;
                 for(int j=0;j<f_info->n_symbols;j++){

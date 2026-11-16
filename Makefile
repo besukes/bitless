@@ -63,7 +63,7 @@ clean:
 	rm -rf build
 	rm -f compressor
 	rm -rf dcbuild
-	rm -f decompress
+	rm -f decompressor
 
 
 rmc:
