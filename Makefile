@@ -64,6 +64,13 @@ clean:
 	rm -f compressor
 	rm -rf dcbuild
 	rm -f decompressor
+	rm -f tests/*_sf.zip tests/*_hf.zip tests/*_hf.txt tests/*_sf.txt
+
+hclean:
+	rm -rf build
+	rm -f compressor
+	rm -rf dcbuild
+	rm -f decompressor
 
 
 rmc:
