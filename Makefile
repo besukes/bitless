@@ -16,7 +16,7 @@ SRC = $(wildcard src/compression/*.c) \
 	  src/writing/write_out.c \
 	  src/debug/debug.c
 
-DCSRC = src/decompressor/decompressor.c \
+DCSRC = src/decompression/decompressor.c \
 		src/initialization/init_clean.c \
 		$(wildcard src/utils/*.c) \
 		$(wildcard src/algorithms/*.c)
@@ -32,7 +32,7 @@ HDR = src/compression/compressor.h \
 	  $(wildcard src/utils/*.h) \
 	  src/writing/write_out.h
 
-DCHDR = src/decompressor/decompressor.h \
+DCHDR = src/decompression/decompressor.h \
 		src/initialization/init_clean.h \
 		src/includes/types.h \
 		$(wildcard src/algorithms/*.h) 

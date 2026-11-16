@@ -77,7 +77,7 @@ static int parseFileHeader(FILE* file,CompressInfo* f_info,int * lrb,char * buff
 
     int number_symbols = (int)buffer[1] , keep_searching = number_symbols;
     *buffer_cur_indx += 3;
-    *h_size += 4;
+    *h_size = 1;
 
 
     //Reads the Frequency table of each symbol to reconstruct the probabilities table
@@ -136,12 +136,15 @@ static void decompress(char * buffer , int buffer_cur_indx , int header_size , F
 
     while(remaining_file_size > 0){
         int new_buffer_size = (remaining_file_size > BUFFER_SIZE) ? BUFFER_SIZE : remaining_file_size;
-        if(buffer_cur_indx >= BUFFER_SIZE) fread(buffer,1,new_buffer_size,cmp_file);
-        for(int i=0;i<new_buffer_size;i++){
-            char byte = buffer[i];
-            int read_bits = (remaining_file_size - i == 1) ? lrb : 8; //Verifies if we are at the last byte
+        if(buffer_cur_indx >= BUFFER_SIZE){
+            fread(buffer,1,new_buffer_size,cmp_file);
+            buffer_cur_indx = 0;
+        }
+        for(;buffer_cur_indx<new_buffer_size;buffer_cur_indx++){
+            unsigned char byte = buffer[buffer_cur_indx];
+            int read_bits = (remaining_file_size - buffer_cur_indx == 1) ? lrb : 8; //Verifies if we are at the last byte
             while(byte && read_bits){
-                char mrb = byte & (1ULL<<7); //Char has 8 bits , we get the most relevant bit
+                unsigned char mrb = byte & (1ULL<<7); //Char has 8 bits , we get the most relevant bit
                 byte<<=1;
                 output_code |= mrb;
                 code_size++;
