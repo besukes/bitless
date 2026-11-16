@@ -1,4 +1,5 @@
 #include "write_out.h"
+#include "src/utils/sorter.h"
 
 
 /*Writes decompresssion info in the notation NEW_SYMBOL = OLD_SYMBOL in order to decompress after*/
@@ -69,6 +70,20 @@ static void writeCompressedFileLine(char * line , CompressInfo * file_info , Bit
 }
 
 
+static void make_canonical(CompressInfo * f){
+    int n = f->n_symbols;
+    sortByCodeLength(f->symbols,f->newcode_arr,n);
+
+    // 2) atribui os códigos canónicos
+    unsigned long long code = 0;
+    for(int i=0;i<n;i++){
+        int len = f->newcode_arr[i].length;
+        if(i>0) code = (code + 1) << (len - f->newcode_arr[i-1].length);
+        f->newcode_arr[i].new_code = code;
+    }
+}
+
+
 /*Given a already parsed "f" file , checks if theres already a compressed file relative to f and , if not ,
 compresses the file with some simple functions*/
 void writeOutCompressedFile(CompressInfo * file_info){
@@ -87,6 +102,7 @@ void writeOutCompressedFile(CompressInfo * file_info){
     }
     new_file = fopen(new_path,"w");
 
+    make_canonical(file_info);
     writeDecompressionInfo(new_file,file_info);
 
     //This refers to the file that is being compressed

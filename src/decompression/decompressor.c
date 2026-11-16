@@ -80,7 +80,6 @@ static int parseFileHeader(FILE* file,CompressInfo* f_info,int * lrb,char * buff
 
 
     //Reads the Frequency table of each symbol to reconstruct the probabilities table
-    int parsing_error = 0;
     int parser[MAX_SYMBOLS] = {0};
     while(keep_searching){
         *buffer_cur_indx = readHeaderBuffer(buffer,*buffer_cur_indx,read_bytes,parser,&keep_searching);

@@ -56,8 +56,9 @@ void sortByCodeLength(char* symbs , NewSymbols* code , int N){
         char s_key = symbs[i];
         int j = i - 1;
 
-        // só desloca quando o comprimento é ESTRITAMENTE maior (> e não >=)
-        while(j >= 0 && code[j].length > c_key.length){
+        //Back tracking algorithm while the code length of j is bigger than of i's
+        //We also need to break the tie of codes being of equal length , by its symbol
+        while(j >= 0 && (code[j].length > c_key.length) || (code[j].length == c_key.length && (unsigned char)symbs[j] > (unsigned char)s_key)){
             code[j+1]  = code[j];
             symbs[j+1] = symbs[j];
             j--;
