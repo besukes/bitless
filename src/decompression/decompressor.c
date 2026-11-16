@@ -52,8 +52,8 @@ static int dc_error_handler(int flags , int indx){
 
 
 /*Reads the frequency table of a compressed file header and stores the information directly onto f_info*/
-static int readHeaderBuffer(char * buffer , int size_buffer , int parser[MAX_SYMBOLS] , int * nmbr_pairs){
-    int i=0;
+static int readHeaderBuffer(char * buffer , int current_indx , int size_buffer , int parser[MAX_SYMBOLS] , int * nmbr_pairs){
+    int i=current_indx;
     while(i<size_buffer && *nmbr_pairs > 0){
         unsigned char symb = (unsigned char)buffer[i];
         parser[symb] = buffer[i+1];
@@ -76,12 +76,15 @@ static int parseFileHeader(FILE* file,CompressInfo* f_info,int * lrb,char * buff
     *lrb = (int)buffer[0];
 
     int number_symbols = (int)buffer[1] , keep_searching = number_symbols;
+    *buffer_cur_indx += 3;
+    *h_size += 4;
+
 
     //Reads the Frequency table of each symbol to reconstruct the probabilities table
     int parsing_error = 0;
     int parser[MAX_SYMBOLS] = {0};
     while(keep_searching){
-        *buffer_cur_indx = readHeaderBuffer(buffer,read_bytes,parser,&keep_searching);
+        *buffer_cur_indx = readHeaderBuffer(buffer,*buffer_cur_indx,read_bytes,parser,&keep_searching);
         *h_size += *buffer_cur_indx;
         if(keep_searching){
             read_bytes = fread(buffer,1,BUFFER_SIZE -1,file);
